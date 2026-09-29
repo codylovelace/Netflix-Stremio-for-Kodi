@@ -36,8 +36,8 @@ from metadata_bridge import (details as metadata_details, people as metadata_peo
 HANDLE = int(sys.argv[1])
 BASE = 'plugin://script.stremioelec/'
 ADDON = get_addon()
-MANIFEST = ADDON.getSetting('manifest').strip()
-HOME_MANIFEST = 'https://v3-cinemeta.strem.io/manifest.json'
+HOME_MANIFEST = 'https://aiometadata.elfhosted.com/stremio/d77f62c8-9dc7-4863-9390-58eb6a89245c/manifest.json'
+MANIFEST = ADDON.getSetting('manifest').strip() or HOME_MANIFEST
 COMMUNITY_RUNTIME_WINDOW_ID = 11194
 STREAMS_WINDOW_ID = 10000
 STORE = Store(xbmcvfs.translatePath(ADDON.getAddonInfo('profile')))

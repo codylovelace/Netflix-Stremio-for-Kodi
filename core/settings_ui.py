@@ -174,9 +174,9 @@ def sync_window():
         connected = False
     window.setProperty('StremioSettings.Account', 'Connected' if connected else 'Not connected')
     window.setProperty('StremioSettings.Weather', ADDON.getSetting('weather_location').strip() or 'Not set')
-    manifest = ADDON.getSetting('manifest').strip() or 'https://v3-cinemeta.strem.io/manifest.json'
+    manifest = ADDON.getSetting('manifest').strip() or 'https://aiometadata.elfhosted.com/stremio/d77f62c8-9dc7-4863-9390-58eb6a89245c/manifest.json'
     window.setProperty('StremioSettings.CatalogSource',
-                       'Official Cinemeta' if manifest == 'https://v3-cinemeta.strem.io/manifest.json' else 'Custom')
+                       'AIO Metadata' if 'aiometadata' in manifest else ('Official Cinemeta' if manifest == 'https://v3-cinemeta.strem.io/manifest.json' else 'Custom'))
     window.setProperty('StremioSettings.KodiVersion', xbmc.getInfoLabel('System.BuildVersion'))
     window.setProperty('StremioSettings.Runtime',
                        'Portable Kodi' if xbmc.getCondVisibility('System.HasAddon(service.stremioelec.portable)') else 'StremioELEC OS')
@@ -199,11 +199,14 @@ def helper_menu():
         elif action == 1:
             ADDON.setSetting('tmdb_api_key', '')
         return
-    current = ADDON.getSetting('manifest').strip() or 'https://v3-cinemeta.strem.io/manifest.json'
-    action = choose('Catalog source', ['Use official Cinemeta', 'Change manifest URL', 'Current: ' + current])
+    aio_manifest = 'https://aiometadata.elfhosted.com/stremio/d77f62c8-9dc7-4863-9390-58eb6a89245c/manifest.json'
+    current = ADDON.getSetting('manifest').strip() or aio_manifest
+    action = choose('Catalog source', ['Use AIO Metadata (Default)', 'Use official Cinemeta', 'Change manifest URL', 'Current: ' + current])
     if action == 0:
-        ADDON.setSetting('manifest', 'https://v3-cinemeta.strem.io/manifest.json')
+        ADDON.setSetting('manifest', aio_manifest)
     elif action == 1:
+        ADDON.setSetting('manifest', 'https://v3-cinemeta.strem.io/manifest.json')
+    elif action == 2:
         value = DIALOG.input('Stremio catalog manifest URL', defaultt=current,
                              type=xbmcgui.INPUT_ALPHANUM)
         if value.strip():

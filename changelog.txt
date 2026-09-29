@@ -1,3 +1,9 @@
+1.0.42
+- Update default catalog manifest to AIO Metadata (https://aiometadata.elfhosted.com).
+- Add support for AIO Metadata in Home catalogs, Cinemeta fallback bridge, and catalog resolvers.
+- Add catalog source switcher in settings to easily toggle between AIO Metadata, Cinemeta, and custom manifests.
+- Enable Netflix theme preset as default with Netflix Red focus highlights, trailer hero preview, and smooth row dimming.
+
 1.0.41
 - Redesign episode cards to match the approved TV layout.
 - Overlay "SxxExx - Episode title" directly on the episode thumbnail.

@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 from protocol import fetch, resource_url
 from sources import supports
 
-HOME_MANIFEST = 'https://v3-cinemeta.strem.io/manifest.json'
+HOME_MANIFEST = 'https://aiometadata.elfhosted.com/stremio/d77f62c8-9dc7-4863-9390-58eb6a89245c/manifest.json'
 MERGE_FIELDS = (
     'name', 'description', 'poster', 'background', 'landscape', 'logo',
     'releaseInfo', 'released', 'year', 'runtime', 'imdbRating', 'country',

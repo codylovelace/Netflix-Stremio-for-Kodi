@@ -27,7 +27,7 @@ from stream_ui import stream_card
 from library_actions import member, change
 
 STORE = Store(xbmcvfs.translatePath(CORE.getAddonInfo('profile')))
-HOME = 'https://v3-cinemeta.strem.io/manifest.json'
+HOME = 'https://aiometadata.elfhosted.com/stremio/d77f62c8-9dc7-4863-9390-58eb6a89245c/manifest.json'
 
 
 def providers():
@@ -35,7 +35,8 @@ def providers():
 
 
 def catalog(kind, genre=''):
-    payload = fetch(resource_url(HOME, 'catalog', kind, 'top', {'genre': genre} if genre else None))
+    manifest_url = CORE.getSetting('manifest').strip() or HOME
+    payload = fetch(resource_url(manifest_url, 'catalog', kind, 'top', {'genre': genre} if genre else None))
     return [r for r in payload.get('metas', []) if isinstance(r, dict) and r.get('id')][:40]
 
 
