@@ -104,6 +104,8 @@ def play(meta, identity, stream, resume_ms=0):
     cache = state.load()
     cache.update(created=time.time())
     urls = dict(cache.get('urls') or {})
+    if len(urls) > 50:
+        urls = dict(list(urls.items())[-50:])
     urls[key] = dict(stream, meta=meta, kind=meta['type'], id=identity, resume_ms=resume_ms)
     cache['urls'] = urls
     state.save(cache)

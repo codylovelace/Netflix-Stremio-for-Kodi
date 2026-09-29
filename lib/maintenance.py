@@ -11,6 +11,10 @@ def cache_action(clear=False):
         with cache.connect() as db:
             if clear:
                 db.execute('DELETE FROM responses')
+                try:
+                    db.execute('VACUUM')
+                except Exception:
+                    pass
             count, size = db.execute('SELECT COUNT(*),COALESCE(SUM(LENGTH(CAST(value AS BLOB))),0) FROM responses').fetchone()
         text = ('Cache cleared. Reopen the addon to reload data.' if clear else
                 '{} cached responses ({:.1f} MB).\nCatalogs: 15 minutes. Metadata and ratings: 24 hours.\nResponse data limit: 64 MB.'.format(count, size / 1048576))

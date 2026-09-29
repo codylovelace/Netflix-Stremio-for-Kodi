@@ -14,8 +14,9 @@ def resume_seconds(value):
 def button_label(saved):
     state = saved.get('state') or {}
     verb = 'Resume' if resume_seconds(state.get('timeOffset')) else 'Play'
-    if saved.get('type') == 'series':
-        match = re.fullmatch(re.escape(saved['_id']) + r':(\d+):(\d+)', str(state.get('video_id', '')))
+    series_id = str(saved.get('_id') or saved.get('id') or '')
+    if saved.get('type') == 'series' and series_id:
+        match = re.fullmatch(re.escape(series_id) + r':(\d+):(\d+)', str(state.get('video_id', '')))
         if match and int(match[2]) > 0:
             return '{} Season {}: Episode {}'.format(verb, int(match[1]), int(match[2]))
     return verb

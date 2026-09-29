@@ -67,9 +67,18 @@ def collect(providers, kind, identity, fetcher=fetch):
             return [], 0, 1
 
     output, skipped, failed = [], 0, 0
-    with ThreadPoolExecutor(max_workers=4) as pool:
-        for entries, ignored, errors in pool.map(query, selected):
-            output.extend(entries)
-            skipped += ignored
-            failed += errors
+    if not selected:
+        return output, skipped, failed
+    if len(selected) == 1:
+        results = [query(selected[0])]
+    else:
+        try:
+            with ThreadPoolExecutor(max_workers=min(4, len(selected))) as pool:
+                results = list(pool.map(query, selected))
+        except RuntimeError:
+            results = [query(p) for p in selected]
+    for entries, ignored, errors in results:
+        output.extend(entries)
+        skipped += ignored
+        failed += errors
     return output, skipped, failed

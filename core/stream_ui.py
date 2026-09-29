@@ -8,6 +8,15 @@ SIZE_RE = re.compile(r'(?i)(\d+(?:\.\d+)?\s*(?:TB|GB|MB))')
 SEED_RE = re.compile(r'👤\s*(\d+)')
 SOURCE_RE = re.compile(r'⚙️\s*([^\r\n]+)')
 FLAG_RE = re.compile(r'[\U0001F1E6-\U0001F1FF]{2}')
+MEDIA_EXT_RE = re.compile(r'(?i)\.(mkv|mp4|avi|m2ts|ts)\b')
+AUDIO_PATTERNS = (
+    (re.compile(r'(?i)dts[- .]?hd(?:[ .]?ma)?(?:[ .]?(\d\.\d))?'), 'DTS-HD MA'),
+    (re.compile(r'(?i)truehd(?:[ .]?(\d\.\d))?'), 'TrueHD'),
+    (re.compile(r'(?i)atmos'), 'Atmos'),
+    (re.compile(r'(?i)dts[- .]?x'), 'DTS-X'),
+    (re.compile(r'(?i)aac\s*([257]\.\d)'), 'AAC'),
+    (re.compile(r'(?i)ac3\s*([257]\.\d)'), 'AC3'),
+)
 
 
 def _clean(value):
@@ -36,7 +45,7 @@ def stream_card(stream):
         filename = os.path.basename(filename.replace('\\', '/'))
     if not filename:
         candidates = [line.strip() for line in detail.splitlines()
-                      if re.search(r'(?i)\.(mkv|mp4|avi|m2ts|ts)\b', line)]
+                      if MEDIA_EXT_RE.search(line)]
         filename = os.path.basename(candidates[-1]) if candidates else detail.splitlines()[0] if detail else 'Stream'
 
     corpus = '\n'.join(v for v in (detail, filename, label) if v)
@@ -91,16 +100,8 @@ def stream_card(stream):
     if _contains(corpus, '10bit', '10-bit'):
         add('10bit')
 
-    audio_patterns = (
-        (r'(?i)dts[- .]?hd(?:[ .]?ma)?(?:[ .]?(\d\.\d))?', 'DTS-HD MA'),
-        (r'(?i)truehd(?:[ .]?(\d\.\d))?', 'TrueHD'),
-        (r'(?i)atmos', 'Atmos'),
-        (r'(?i)dts[- .]?x', 'DTS-X'),
-        (r'(?i)aac\s*([257]\.\d)', 'AAC'),
-        (r'(?i)ac3\s*([257]\.\d)', 'AC3'),
-    )
-    for pattern, name in audio_patterns:
-        match = re.search(pattern, corpus)
+    for pattern, name in AUDIO_PATTERNS:
+        match = pattern.search(corpus)
         if match:
             channels = match.group(1) if match.lastindex else ''
             add(name + ((' ' + channels) if channels else ''))

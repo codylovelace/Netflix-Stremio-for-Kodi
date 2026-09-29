@@ -23,6 +23,25 @@ def resource_url(manifest, resource, kind, identity, extras=None):
     return url + '.json'
 
 
+_CACHE_INSTANCE = None
+
+
+def _get_cache_instance():
+    global _CACHE_INSTANCE
+    if _CACHE_INSTANCE is not None:
+        return _CACHE_INSTANCE
+    try:
+        import xbmcaddon
+        import xbmcvfs
+        from lib.disk_cache import DiskCache
+        from pathlib import Path
+        profile = xbmcvfs.translatePath(xbmcaddon.Addon('script.stremioelec').getAddonInfo('profile'))
+        _CACHE_INSTANCE = DiskCache(Path(profile) / 'cache')
+        return _CACHE_INSTANCE
+    except Exception:
+        return None
+
+
 def _browse_cache(url):
     # Restrict caching to immutable metadata and short-lived browsing catalogs.
     # Account API calls, streams, subtitles and manifests are never cached here.
@@ -30,15 +49,8 @@ def _browse_cache(url):
     ttl = 86400 if '/meta/' in path else (900 if '/catalog/' in path else 0)
     if not ttl:
         return None, 0
-    try:
-        import xbmcaddon
-        import xbmcvfs
-        from lib.disk_cache import DiskCache
-        profile = xbmcvfs.translatePath(xbmcaddon.Addon('script.stremioelec').getAddonInfo('profile'))
-        from pathlib import Path
-        return DiskCache(Path(profile) / 'cache'), ttl
-    except Exception:
-        return None, 0
+    cache = _get_cache_instance()
+    return (cache, ttl) if cache is not None else (None, 0)
 
 
 def fetch(url, timeout=15):

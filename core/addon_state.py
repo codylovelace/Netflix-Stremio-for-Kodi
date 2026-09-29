@@ -41,8 +41,18 @@ def migrate_profile(source, target, set_setting):
                     os.link(temporary, new)  # Atomic publication; existing data wins.
                 except FileExistsError:
                     pass
+                except OSError:
+                    if not new.exists():
+                        try:
+                            os.replace(temporary, new)
+                        except OSError:
+                            pass
             finally:
-                os.unlink(temporary)
+                if os.path.exists(temporary):
+                    try:
+                        os.unlink(temporary)
+                    except OSError:
+                        pass
     marker.touch()
 
 

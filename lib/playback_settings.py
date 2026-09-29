@@ -15,9 +15,9 @@ def write_keymap(directory, enabled):
     target = Path(directory) / 'zz-stremio-for-kodi-back.xml'
     if enabled:
         target.parent.mkdir(parents=True, exist_ok=True)
-        if target.exists() and target.read_text() == KEYMAP:
+        if target.exists() and target.read_text(encoding='utf-8') == KEYMAP:
             return False
-        target.write_text(KEYMAP)
+        target.write_text(KEYMAP, encoding='utf-8')
         return True
     if target.exists():
         target.unlink()

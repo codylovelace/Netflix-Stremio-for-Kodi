@@ -109,8 +109,16 @@ def merged_meta(kind, identity, providers=(), fetcher=fetch):
         except Exception:
             return {}
 
-    with ThreadPoolExecutor(max_workers=min(4, max(1, len(rows)))) as pool:
-        results = list(pool.map(one, rows)) if rows else []
+    if not rows:
+        results = []
+    elif len(rows) == 1:
+        results = [one(rows[0])]
+    else:
+        try:
+            with ThreadPoolExecutor(max_workers=min(4, len(rows))) as pool:
+                results = list(pool.map(one, rows))
+        except RuntimeError:
+            results = [one(r) for r in rows]
 
     merged = {'id': identity, 'type': kind, 'genres': [], 'cast': [],
               'director': [], 'writer': [], 'videos': [], 'links': []}
@@ -317,5 +325,28 @@ def recommendations(meta, providers=(), limit=24, fetcher=fetch):
 
 
 def runtime_seconds(value):
-    match = re.search(r'(\d+)\s*min', str(value or ''), re.I)
-    return int(match.group(1)) * 60 if match else 0
+    if value in (None, ''):
+        return 0
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return int(round(value)) if value > 300 else int(round(value * 60))
+    text = str(value).strip()
+    if not text:
+        return 0
+    iso = re.fullmatch(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?', text, re.I)
+    if iso:
+        return (int(iso.group(1) or 0) * 3600 +
+                int(iso.group(2) or 0) * 60 +
+                int(iso.group(3) or 0))
+    hm = re.fullmatch(r'(?:(\d+)\s*h(?:ours?|rs?)?)?\s*(?:(\d+)\s*m(?:in(?:ute)?s?)?)?(?:\s*(\d+)\s*s(?:ec(?:ond)?s?)?)?', text, re.I)
+    if hm and (hm.group(1) or hm.group(2) or hm.group(3)):
+        return (int(hm.group(1) or 0) * 3600 +
+                int(hm.group(2) or 0) * 60 +
+                int(hm.group(3) or 0))
+    match = re.search(r'(\d+)\s*(?:m|min|mins|minutes)\b', text, re.I)
+    if match:
+        return int(match.group(1)) * 60
+    digits = re.fullmatch(r'(\d+)', text)
+    if digits:
+        val = int(digits.group(1))
+        return val if val > 300 else val * 60
+    return 0

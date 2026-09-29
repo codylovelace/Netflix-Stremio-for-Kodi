@@ -2,21 +2,25 @@
 from pathlib import Path
 import xml.etree.ElementTree as ET
 
-NAMES = ('Purple', 'Black', 'Blue', 'Green', 'Gold')
-# background, sidebar, surface, button, selected card, focus, accent
+NAMES = ('Purple', 'Black', 'Blue', 'Green', 'Gold', 'Netflix')
+# background, sidebar, surface, button, selected card, focus, accent, focused_text
 PALETTES = (
- ('FF100E1C','FF14111E','FF242333','FF302B41','FF42365C','FFC4ACFF','FFB5A4E8'),
- ('FF080808','FF101010','FF202020','FF303030','FF464646','FFE5E5E5','FFCCCCCC'),
- ('FF0B1421','FF101C2C','FF1C2C41','FF263C56','FF31577A','FFA4D8FF','FF85C7F2'),
- ('FF0B1814','FF10241C','FF1C352A','FF294839','FF35644C','FFA7EAC2','FF83CEA1'),
- ('FF19140B','FF241D10','FF352B1C','FF493B27','FF665233','FFF4D59B','FFDDB875'),
+ ('FF100E1C','FF14111E','FF242333','FF302B41','FF42365C','FFC4ACFF','FFB5A4E8','FF15161D'),
+ ('FF080808','FF101010','FF202020','FF303030','FF464646','FFE5E5E5','FFCCCCCC','FF15161D'),
+ ('FF0B1421','FF101C2C','FF1C2C41','FF263C56','FF31577A','FFA4D8FF','FF85C7F2','FF15161D'),
+ ('FF0B1814','FF10241C','FF1C352A','FF294839','FF35644C','FFA7EAC2','FF83CEA1','FF15161D'),
+ ('FF19140B','FF241D10','FF352B1C','FF493B27','FF665233','FFF4D59B','FFDDB875','FF15161D'),
+ ('FF0E0E0E','FF121212','FF1A1A1A','FF282828','FFE50914','FFE50914','FFE50914','FFFFFFFF'),
 )
-KEYS = ('background','sidebar','surface','button','selected','focus','accent')
+KEYS = ('background','sidebar','surface','button','selected','focus','accent','focused_text')
 
 
 def index(addon):
     try:
-        value = int(addon.getSetting('ui_theme') or 0)
+        raw = addon.getSetting('ui_theme')
+        if raw in NAMES:
+            return NAMES.index(raw)
+        value = int(raw or 0)
         return value if 0 <= value < len(PALETTES) else 0
     except (TypeError, ValueError):
         return 0
@@ -32,6 +36,7 @@ def apply(tree, selected=0, poster_color=None):
         'selected': ('42365C','7355DE'),
         'focus': ('C4ACFF','F0F0F2','4564FF'),
         'accent': ('B5A4E8','9B7CFF','9B7BFF'),
+        'focused_text': ('15161D',),
     }
     mapping = {color:palette[role][2:] for role,colors in roles.items() for color in colors}
     color_tags = {'textcolor','focusedcolor','disabledcolor','selectedcolor','shadowcolor'}
@@ -47,7 +52,7 @@ def apply(tree, selected=0, poster_color=None):
         if element.tag in ('texture','bordertexture') and any(part in (element.text or '') for part in ('poster-glow','poster-border')):
             element.set('colordiffuse',poster_color or palette['focus'])
         if element.tag=='texturefocus':
-            element.set('colordiffuse',palette['focus'])
+            element.set('colordiffuse',poster_color if (poster_color and poster_color != 'FFFFFFFF') else palette['focus'])
     # Sidebar focus marker and labels use the same accent as the rest of the app.
     menu=tree.find('.//control[@id="9000"]/focusedlayout')
     if menu is not None:

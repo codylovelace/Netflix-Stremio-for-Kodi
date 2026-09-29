@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 class SigninTests(unittest.TestCase):
     def test_setup_completion_is_not_login(self):
-        tree = ast.parse((ROOT/'lib/signin.py').read_text())
+        tree = ast.parse((ROOT/'lib/signin.py').read_text(encoding='utf-8'))
         fn = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'signed_in')
         store = Mock()
         scope = {'account_store': lambda: store}
@@ -23,7 +23,7 @@ class SigninTests(unittest.TestCase):
         self.assertTrue(scope['signed_in']())
 
     def test_cancelled_login_does_not_open_home(self):
-        tree = ast.parse((ROOT/'lib/app.py').read_text())
+        tree = ast.parse((ROOT/'lib/app.py').read_text(encoding='utf-8'))
         run = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'run')
         module = types.ModuleType('lib.signin')
         module.signed_in = Mock(return_value=False)
@@ -47,7 +47,7 @@ class SigninTests(unittest.TestCase):
 
 
     def test_confirmed_link_saves_token_and_opens_home(self):
-        tree = ast.parse((ROOT/'lib/signin.py').read_text())
+        tree = ast.parse((ROOT/'lib/signin.py').read_text(encoding='utf-8'))
         cls = next(n for n in tree.body if isinstance(n, ast.ClassDef))
         fn = next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == 'link_account')
         store = Mock()
@@ -69,7 +69,7 @@ class SigninTests(unittest.TestCase):
         window.close.assert_called_once()
 
     def test_pending_link_does_not_save_login(self):
-        tree = ast.parse((ROOT/'lib/signin.py').read_text())
+        tree = ast.parse((ROOT/'lib/signin.py').read_text(encoding='utf-8'))
         cls = next(n for n in tree.body if isinstance(n, ast.ClassDef))
         fn = next(n for n in cls.body if isinstance(n, ast.FunctionDef) and n.name == 'link_account')
         store = Mock()

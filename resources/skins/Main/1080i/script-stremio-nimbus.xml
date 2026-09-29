@@ -370,7 +370,7 @@
         <visible>!String.IsEmpty(Window.Property(has400))</visible>
         <control type="group" id="400665">
           <animation condition="!Control.HasFocus(400) + ControlGroup(2000).HasFocus" reversible="true">
-            <effect type="faded" start="100" end="80" time="300" />
+            <effect type="fade" start="100" end="80" time="300" />
             <effect type="fadediffuse" start="FFE9E9E9" end="FFBABABA" time="300" />
           </animation>
           <left>50</left>
@@ -735,7 +735,7 @@
         <visible>!String.IsEmpty(Window.Property(has401))</visible>
         <control type="group" id="401665">
           <animation condition="!Control.HasFocus(401) + ControlGroup(2000).HasFocus" reversible="true">
-            <effect type="faded" start="100" end="80" time="300" />
+            <effect type="fade" start="100" end="80" time="300" />
             <effect type="fadediffuse" start="FFE9E9E9" end="FFBABABA" time="300" />
           </animation>
           <left>50</left>

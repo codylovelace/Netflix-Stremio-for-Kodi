@@ -79,7 +79,7 @@ class AddonTests(unittest.TestCase):
                         self.assertTrue((SOURCE/value[len(prefix):]).is_file(), value)
 
     def test_ordinary_media_launch_opens_nimbus(self):
-        tree = ast.parse((SOURCE / 'plugin.py').read_text())
+        tree = ast.parse((SOURCE / 'plugin.py').read_text(encoding='utf-8', errors='ignore'))
         run = next(n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'run')
         kodi, plugin = Mock(), Mock()
         scope = {'xbmc': kodi, 'xbmcplugin': plugin, 'HANDLE': 1}
@@ -93,7 +93,7 @@ class AddonTests(unittest.TestCase):
             if path.relative_to(SOURCE).parts[0] in {'.git', '.github', 'tests', 'tools', 'dist', '.venv'}:
                 continue
             if path.suffix in {'.py','.xml','.json'} and path.name != 'addon_state.py':
-                self.assertNotIn('plugin.video.stremioelec', path.read_text(), str(path))
+                self.assertNotIn('plugin.video.stremioelec', path.read_text(encoding='utf-8', errors='ignore'), str(path))
 
 
 if __name__ == '__main__':

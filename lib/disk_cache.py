@@ -14,10 +14,17 @@ class DiskCache:
         self.max_bytes = max_bytes
         with self.connect() as db:
             db.execute('CREATE TABLE IF NOT EXISTS responses (key TEXT PRIMARY KEY, expires REAL, used REAL, value TEXT)')
+            db.execute('CREATE INDEX IF NOT EXISTS idx_responses_expires ON responses(expires)')
+            db.execute('CREATE INDEX IF NOT EXISTS idx_responses_used ON responses(used)')
 
     @contextmanager
     def connect(self):
         db = sqlite3.connect(self.path, timeout=10)
+        try:
+            db.execute('PRAGMA journal_mode=WAL')
+            db.execute('PRAGMA synchronous=NORMAL')
+        except sqlite3.Error:
+            pass
         try:
             with db:
                 yield db

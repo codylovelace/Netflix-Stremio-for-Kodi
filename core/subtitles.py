@@ -49,8 +49,16 @@ def collect_subtitles(providers, kind, identity, allowed, preferred, inline=None
             selected.append(provider)
             seen.add(url)
     entries = list(inline) if isinstance(inline, list) else []
-    with ThreadPoolExecutor(max_workers=3) as pool:
-        for result in pool.map(query, selected):
+    if selected:
+        if len(selected) == 1:
+            raw_results = [query(selected[0])]
+        else:
+            try:
+                with ThreadPoolExecutor(max_workers=min(3, len(selected))) as pool:
+                    raw_results = list(pool.map(query, selected))
+            except RuntimeError:
+                raw_results = [query(p) for p in selected]
+        for result in raw_results:
             if isinstance(result, list):
                 entries.extend(result)
     results, seen = [], set()

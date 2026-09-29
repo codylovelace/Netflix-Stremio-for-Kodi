@@ -147,7 +147,7 @@ class Store:
         if not self.path.exists():
             return {}
         try:
-            data = json.loads(self.path.read_text())
+            data = json.loads(self.path.read_text(encoding='utf-8'))
             if not isinstance(data, dict):
                 raise ValueError()
             return data
@@ -168,9 +168,9 @@ class Store:
                     os.fchmod(fd, 0o600)
                 except OSError:
                     pass
-            with os.fdopen(fd, 'w') as stream:
+            with os.fdopen(fd, 'w', encoding='utf-8') as stream:
                 fd = None
-                json.dump(data, stream)
+                json.dump(data, stream, ensure_ascii=False)
                 stream.flush()
                 if hasattr(os, 'fsync'):
                     try:

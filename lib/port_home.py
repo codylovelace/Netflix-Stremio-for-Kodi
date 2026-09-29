@@ -72,7 +72,7 @@ def replace(parent, tag, text):
 
 home = E.parse(SRC / 'Home.xml').getroot()
 oldpath = ROOT / '1080i/script-stremio-nimbus.xml'
-old = oldpath.read_text()
+old = oldpath.read_text(encoding='utf-8')
 previous = E.fromstring(old)
 out = E.Element('window')
 put(out, 'defaultcontrol', '9000', always='true')

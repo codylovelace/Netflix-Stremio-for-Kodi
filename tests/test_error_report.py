@@ -80,7 +80,7 @@ class ErrorReportTests(unittest.TestCase):
         self.assertNotIn('account', json.dumps(payload).lower())
 
     def test_default_setting_enables_automatic_reporting(self):
-        settings = (ROOT / 'resources' / 'settings.xml').read_text()
+        settings = (ROOT / 'resources' / 'settings.xml').read_text(encoding='utf-8')
         self.assertIn('id="error_reporting_auto"', settings)
         self.assertIn('default="true"', settings)
         self.assertIn('Report a problem now', settings)

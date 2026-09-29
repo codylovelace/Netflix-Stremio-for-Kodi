@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def function_from_file(path, name, class_name=None):
-    tree = ast.parse(path.read_text())
+    tree = ast.parse(path.read_text(encoding='utf-8'))
     body = tree.body
     if class_name:
         cls = next(node for node in body if isinstance(node, ast.ClassDef) and node.name == class_name)

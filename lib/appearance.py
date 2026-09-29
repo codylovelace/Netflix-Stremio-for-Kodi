@@ -2,6 +2,7 @@
 import xml.etree.ElementTree as ET
 
 COLORS = ['FFFFFFFF', 'FF9B7BFF', 'FF55BBFF', 'FF55DD99', 'FFFFBB55']
+NETFLIX_RED = 'FFE50914'
 
 
 def options(addon):
@@ -9,8 +10,16 @@ def options(addon):
     selected = index(addon)
     try:
         value = addon.getSetting('ui_focus_color')
-        poster = int(value) if value else 5
-        color = COLORS[poster] if 0 <= poster < len(COLORS) else PALETTES[selected][5]
+        if value in ('Netflix Red', NETFLIX_RED):
+            poster = 6
+        else:
+            poster = int(value) if value is not None and value != '' else 5
+        if poster == 6:
+            color = NETFLIX_RED
+        elif 0 <= poster < len(COLORS):
+            color = COLORS[poster]
+        else:
+            color = PALETTES[selected][5]
     except (TypeError, ValueError):
         color = PALETTES[selected][5]
     return {'theme': selected, 'color': color, 'animations': addon.getSetting('ui_animations') != 'false',
@@ -27,9 +36,10 @@ def apply(tree, options):
             node.set('time', '0')
             if 'delay' in node.attrib:
                 node.set('delay', '0')
-    button = tree.find('.//control[@id="9200"]/texturefocus')
-    if button is not None and color != COLORS[0]:
-        button.set('colordiffuse', color)
+    for btn_id in ('9200', '9201', '9202'):
+        button = tree.find(f'.//control[@id="{btn_id}"]/texturefocus')
+        if button is not None and color != COLORS[0]:
+            button.set('colordiffuse', color)
     group = tree.find('.//control[@id="2000"]')
     if group is not None and options.get('dim'):
         ET.SubElement(group, 'animation', effect='fade', start='100', end='45',

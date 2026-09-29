@@ -603,8 +603,11 @@ class InfoWindow(NimbusWindow):
         if series:
             next_video, self.resume_ms = api.next_series_episode(self.meta.get('videos', []), self.meta['id'], saved)
             if next_video and next_video['id'] in self.watched_episodes:
-                regular = [v for season in api.seasons(self.meta) if season['season'] > 0
-                           for v in api.episodes(self.meta, season['season'])]
+                regular = sorted(
+                    [v for v in self.meta.get('videos', [])
+                     if isinstance(v, dict) and int(v.get('season') or 0) > 0 and v.get('id')],
+                    key=lambda x: (int(x.get('season') or 0), int(x.get('episode') or x.get('number') or 0))
+                )
                 next_video = next((v for v in regular if v['id'] not in self.watched_episodes), next_video)
                 self.resume_ms = 0
             if next_video:
