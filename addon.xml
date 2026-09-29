@@ -2,7 +2,7 @@
 <addon id="script.stremioelec"
        name="Stremio for Kodi"
        version="1.0.41"
-       provider-name="0eroiQ">
+       provider-name="codylovelace">
   <requires>
     <import addon="xbmc.python" version="3.0.0" />
     <import addon="script.module.qrcode" version="6.1.0+matrix.3" optional="true" />
@@ -20,7 +20,7 @@
     <description lang="en_GB">Stremio for Kodi program addon with embedded Nimbus Home and media information. Nimbus layouts and artwork by Ivar Brandt. Kodi remains the playback engine; the global Kodi skin is unchanged.</description>
     <platform>all</platform>
     <license>GPL-2.0-or-later</license>
-    <source>https://github.com/0eroiQ/Stremio-for-Kodi</source>
+    <source>https://github.com/codylovelace/Netflix-Stremio-for-Kodi</source>
     <news>Embedded Nimbus menu, original poster widgets and animations, movie and series details, season and section selectors. Credit Ivar Brandt.</news>
   </extension>
 </addon>
