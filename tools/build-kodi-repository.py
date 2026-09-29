@@ -31,16 +31,29 @@ def build(package, output):
             if source.is_file():
                 archive.write(source, f"{repo.attrib['id']}/{source.name}")
     shutil.copyfile(package, addon_dir / package.name)
+    shutil.copyfile(repo_zip, output / repo_zip.name)
     # Preserve the exact published addon package; never rebuild release contents.
     index = ET.Element('addons')
     index.extend([addon, repo])
     data = ET.tostring(index, encoding='utf-8', xml_declaration=True)
     (output / 'addons.xml').write_bytes(data)
-    (output / 'addons.xml.sha256').write_text(hashlib.sha256(data).hexdigest() + '\n')
+    (output / 'addons.xml.sha256').write_text(hashlib.sha256(data).hexdigest() + '\n', encoding='utf-8')
     (output / 'README.md').write_text(
         '# Stremio for Kodi repository\n\n'
         'Install repository.stremioforkodi/repository.stremioforkodi-1.0.0.zip in Kodi, '
-        'then choose Install from repository > Stremio for Kodi Repository > Program add-ons.\n')
+        'then choose Install from repository > Stremio for Kodi Repository > Program add-ons.\n',
+        encoding='utf-8')
+    repo_zip_rel = f"{repo.attrib['id']}/{repo_zip.name}"
+    addon_zip_rel = f"{addon.attrib['id']}/{package.name}"
+    html = (
+        '<!DOCTYPE html>\n<html>\n<head><meta charset="utf-8"><title>Stremio for Kodi Repository</title></head>\n'
+        '<body>\n<h2>Stremio for Kodi Repository</h2>\n<ul>\n'
+        f'<li><a href="{repo_zip.name}">{repo_zip.name}</a></li>\n'
+        f'<li><a href="{repo_zip_rel}">{repo_zip_rel}</a></li>\n'
+        f'<li><a href="{addon_zip_rel}">{package.name}</a></li>\n'
+        '</ul>\n</body>\n</html>\n'
+    )
+    (output / 'index.html').write_text(html, encoding='utf-8')
     return repo_zip
 
 
