@@ -38,7 +38,7 @@ def build_layout(source, profile, count, appearance=None):
         tags = {'left':str(50+index*290), 'top':'535', 'width':'275', 'height':'60',
                 'font':'font23', 'textcolor':'FFE5E5E7', 'focusedcolor':'FF15161D',
                 'label':'$INFO[Window.Property(filter_label_%d)]' % index, 'align':'left', 'textoffsetx':'20',
-                'visible':'[String.IsEqual(Window.Property(page),Discover) | String.IsEqual(Window.Property(page),Library)]',
+                'visible':'[String.IsEqual(Window.Property(page),Movies) | String.IsEqual(Window.Property(page),TV Series) | String.IsEqual(Window.Property(page),Discover) | String.IsEqual(Window.Property(page),Library)]',
                 'onleft':str(9199+index) if index else '9000', 'onright':str(9200+min(index+1,2)),
                 'onup':'9000', 'ondown':'SetFocus($INFO[Window.Property(first_row)])',
                 'texturefocus':'special://home/addons/script.stremioelec/resources/skins/Main/media/masks/flixicon-filled.png',
@@ -49,14 +49,14 @@ def build_layout(source, profile, count, appearance=None):
                 node.set('border','13');node.set('colordiffuse','FFF0F0F2' if key=='texturefocus' else 'FF30313B')
         button.append(copy.deepcopy(group.find('animation')))
         ET.SubElement(button, 'animation', effect='slide', start='0,0', end='0,60', time='0',
-                      condition='String.IsEqual(Window.Property(page),Discover)', reversible='true').text = 'Conditional'
+                      condition='[!String.IsEqual(Window.Property(page),Home) + !String.IsEqual(Window.Property(page),Addons)]', reversible='true').text = 'Conditional'
         arrow = ET.SubElement(controls, 'control', type='image')
         for key,value in {'left':str(290+index*290),'top':'560','width':'16','height':'14',
                           'texture':'special://home/addons/script.stremioelec/resources/skins/Main/media/overlays/arrowdown.png',
                           'visible':tags['visible']}.items(): ET.SubElement(arrow,key).text=value
         arrow.append(copy.deepcopy(group.find('animation')))
         ET.SubElement(arrow, 'animation', effect='slide', start='0,0', end='0,60', time='0',
-                      condition='String.IsEqual(Window.Property(page),Discover)', reversible='true').text = 'Conditional'
+                      condition='[!String.IsEqual(Window.Property(page),Home) + !String.IsEqual(Window.Property(page),Addons)]', reversible='true').text = 'Conditional'
     group.find('top').text = '690'
     ET.SubElement(group, 'animation', effect='slide', start='0,0', end='0,-24', time='0',
                   condition='!String.IsEmpty(Window.Property(next_row))',

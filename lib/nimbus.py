@@ -251,7 +251,12 @@ class HomeWindow(AddonsPage, NimbusWindow):
         self.discover_skip = 0
         self.discover_page_size = 100
         self.discover_catalog = None
-        self.discover_extras = {}
+        self.movie_catalog = None
+        self.movie_extras = {}
+        self.movie_skip = 0
+        self.series_catalog = None
+        self.series_extras = {}
+        self.series_skip = 0
         self.library_kind = 'all'
         self.library_order = 'recent'
         self.library_entries = []
@@ -267,8 +272,8 @@ class HomeWindow(AddonsPage, NimbusWindow):
         self.initialized = True
         self.rows = {400+i: [] for i in range(self.row_count)}
         self.hero_key = None
-        self.getControl(9000).addItems([xbmcgui.ListItem(label) for label in
-                                      ('Home', 'Search', 'Discover', 'Library', 'Addons', 'Settings')])
+        self.menu_items = ('Home', 'Movies', 'TV Series', 'Search', 'Library', 'Addons', 'Settings')
+        self.getControl(9000).addItems([xbmcgui.ListItem(label) for label in self.menu_items])
         self.load_home()
         self.setFocusId(9000)
 
@@ -298,7 +303,7 @@ class HomeWindow(AddonsPage, NimbusWindow):
             self.setProperty('has'+str(cid), 'true' if rows else '')
         available = [cid for cid, rows in self.rows.items() if rows]
         for index, cid in enumerate(available):
-            up = available[index-1] if index else (9200 if section in ('Discover', 'Library') else 9000)
+            up = available[index-1] if index else (9200 if section in ('Movies', 'TV Series', 'Discover', 'Library') else 9000)
             down = available[index+1] if index+1 < len(available) else cid
             self.getControl(cid).setNavigation(self.getControl(up), self.getControl(down),
                                                self.getControl(9000), self.getControl(cid))
@@ -381,6 +386,58 @@ class HomeWindow(AddonsPage, NimbusWindow):
         self.hero_request = None
         super().close()
 
+    def load_catalog_section(self, kind):
+        page = 'Movies' if kind == 'movie' else 'TV Series'
+        choices = [c for c in api.discover_choices() if c.get('kind') == kind]
+        current = getattr(self, f'{kind}_catalog', None)
+        extras = getattr(self, f'{kind}_extras', {})
+        skip = getattr(self, f'{kind}_skip', 0)
+
+        if current is None and not extras and not skip:
+            matching = [row for row in self.account_rows
+                        if row.get('kind') == kind or
+                        (kind == 'movie' and 'movie' in row.get('label', '').lower() and 'series' not in row.get('label', '').lower()) or
+                        (kind == 'series' and ('series' in row.get('label', '').lower() or 'tv' in row.get('label', '').lower()))]
+
+            cw = next((r for r in self.account_rows if r.get('label') == 'Continue Watching'), None)
+            if cw:
+                cw_items = [it for it in cw.get('items', []) if it.get('type') == kind]
+                if cw_items:
+                    matching = [{'label': 'Continue Watching', 'items': cw_items}] + matching
+
+            if matching:
+                self.setProperty('filter_label_0', 'All ' + page)
+                self.setProperty('filter_label_1', 'Genre')
+                self.setProperty('filter_label_2', 'Filter')
+                self.setProperty('filters', f'{page} · All Catalogs')
+                self.populate_rows(page, matching)
+                return
+
+        if current is None and choices:
+            current = choices[0]
+            setattr(self, f'{kind}_catalog', current)
+
+        if not current:
+            self.setProperty('filters', f'{page} · No catalogs available')
+            self.populate_rows(page, [])
+            self.setFocusId(9200)
+            return
+
+        values = dict(current.get('defaults', {}))
+        values.update(extras)
+        if skip:
+            values['skip'] = str(skip)
+
+        self.setProperty('filter_label_0', current['label'])
+        self.setProperty('filter_label_1', str(values.get('genre') or 'Genre'))
+        self.setProperty('filter_label_2', f'Page {skip // 50 + 1}' if skip else 'Paging')
+        summary = ' · '.join([page, current['label']] + [str(v) for k, v in values.items() if k != 'skip'])
+        self.setProperty('filters', summary)
+        rows = self.busy(f'Loading {page}', lambda: api.discover_items(current, values))
+        self.populate_rows(page, [{'label': current['label'], 'items': rows or []}])
+        if not rows:
+            self.setFocusId(9200)
+
     def load_discover(self):
         choices = api.discover_choices()
         if not choices:
@@ -420,9 +477,83 @@ class HomeWindow(AddonsPage, NimbusWindow):
 
     def edit_filters(self, direct=None):
         from lib.nimbus_select import Dialog
+        page = self.getProperty('page')
         dialog = Dialog(PATH, left=50 + (direct or 0)*290,
-                        top=660 if self.getProperty('page') == 'Discover' else 600)
-        if self.getProperty('page') == 'Discover':
+                        top=660 if page in ('Movies', 'TV Series', 'Discover') else 600)
+        if page in ('Movies', 'TV Series'):
+            kind = 'movie' if page == 'Movies' else 'series'
+            choices = [c for c in api.discover_choices() if c.get('kind') == kind]
+            if not choices:
+                return
+            current = getattr(self, f'{kind}_catalog', None) or choices[0]
+            extras = [e for e in current.get('extras', []) if e.get('name') not in ('skip','search') and e.get('options')]
+            paging = any(e.get('name') == 'skip' for e in current.get('extras', []))
+            options = ['Catalog'] + [e['name'].title() for e in extras]
+            option = direct
+            if direct == 1:
+                genre = next((i for i, e in enumerate(extras) if e['name'] == 'genre'), None)
+                if genre is None:
+                    genre_cat = next((c for c in choices if any(e.get('name') == 'genre' for e in c.get('extras', []))), None)
+                    if genre_cat:
+                        current = genre_cat
+                        setattr(self, f'{kind}_catalog', current)
+                        extras = [e for e in current.get('extras', []) if e.get('name') not in ('skip','search') and e.get('options')]
+                        genre = next((i for i, e in enumerate(extras) if e['name'] == 'genre'), None)
+                if genre is not None:
+                    option = genre + 1
+                else:
+                    option = None
+            elif direct == 2:
+                if paging:
+                    option = len(options)
+                elif len(extras) > 1:
+                    option = 2
+                else:
+                    option = None
+
+            if option is None:
+                dialog_items = options + (['Next page', 'First page'] if paging else [])
+                option = dialog.select(page, dialog_items)
+
+            if option is None or option < 0:
+                return
+
+            extras_dict = getattr(self, f'{kind}_extras', {})
+            skip = getattr(self, f'{kind}_skip', 0)
+            page_size = 50
+
+            if paging and option >= len(options):
+                skip = skip + page_size if option == len(options) else 0
+                setattr(self, f'{kind}_skip', skip)
+                self.load_catalog_section(kind)
+                return
+
+            setattr(self, f'{kind}_skip', 0)
+            if option == 0:
+                matching = ['All ' + page] + [c['label'] + ' · ' + c['addon'] for c in choices]
+                selected = dialog.select('Catalog', matching)
+                if selected < 0:
+                    return
+                if selected == 0:
+                    setattr(self, f'{kind}_catalog', None)
+                    setattr(self, f'{kind}_extras', {})
+                else:
+                    setattr(self, f'{kind}_catalog', choices[selected - 1])
+                    setattr(self, f'{kind}_extras', {})
+            elif 0 < option <= len(extras):
+                extra = extras[option - 1]
+                required = extra['name'] in current.get('defaults', {})
+                values = list(extra['options'])
+                selected = dialog.select(extra['name'].title(), ([] if required else ['All']) + [str(v) for v in values])
+                if selected < 0:
+                    return
+                if not required and selected == 0:
+                    extras_dict.pop(extra['name'], None)
+                else:
+                    extras_dict[extra['name']] = str(values[selected if required else selected - 1])
+                setattr(self, f'{kind}_extras', extras_dict)
+            self.load_catalog_section(kind)
+        elif page == 'Discover':
             choices = api.discover_choices()
             if not choices:
                 return
@@ -465,7 +596,7 @@ class HomeWindow(AddonsPage, NimbusWindow):
                 else:
                     self.discover_extras[extra['name']] = str(values[selected if required else selected-1])
             self.load_discover()
-        elif self.getProperty('page') == 'Library':
+        elif page == 'Library':
             option = direct if direct is not None else dialog.select('Library', ['Type', 'Sort', 'Refresh from account'])
             if option == 0:
                 from lib.browse import library_kinds
@@ -494,6 +625,13 @@ class HomeWindow(AddonsPage, NimbusWindow):
             if not getattr(self, 'exit_armed', False):
                 self.cancel_trailer()
                 self.setFocusId(9000)
+                items = getattr(self, 'menu_items', ('Home', 'Movies', 'TV Series', 'Search', 'Library', 'Addons', 'Settings'))
+                current_page = self.getProperty('page')
+                if current_page in items:
+                    try:
+                        self.getControl(9000).selectItem(items.index(current_page))
+                    except Exception:
+                        pass
                 self.exit_armed = True
                 return
             self.exit_armed = False
@@ -505,7 +643,18 @@ class HomeWindow(AddonsPage, NimbusWindow):
             return
         if aid in (1, 2, 3, 4, 7, 11, 100, 101):
             self.exit_armed = False
-        if aid == 117 and self.getProperty('page') == 'Discover':
+        if aid == 2 and self.getFocusId() == 9000:
+            try:
+                pos = self.getControl(9000).getSelectedPosition()
+                items = getattr(self, 'menu_items', ('Home', 'Movies', 'TV Series', 'Search', 'Library', 'Addons', 'Settings'))
+                label = items[pos] if 0 <= pos < len(items) else 'Home'
+                current_page = self.getProperty('page')
+                if label in ('Home', 'Movies', 'TV Series', 'Library', 'Addons') and label != current_page:
+                    self.onClick(9000)
+                    return
+            except Exception:
+                pass
+        if aid == 117 and self.getProperty('page') in ('Movies', 'TV Series', 'Discover'):
             self.edit_filters()
             return
         if aid == 11 and self.getFocusId() in self.rows:
@@ -525,7 +674,48 @@ class HomeWindow(AddonsPage, NimbusWindow):
             return
         if cid == 9000:
             pos = self.getControl(9000).getSelectedPosition()
-            cid = (202, 201, 203, 204, 205, 206)[pos] if 0 <= pos < 6 else 202
+            items = getattr(self, 'menu_items', ('Home', 'Movies', 'TV Series', 'Search', 'Library', 'Addons', 'Settings'))
+            label = items[pos] if 0 <= pos < len(items) else 'Home'
+            if label == 'Home':
+                self.load_home()
+            elif label == 'Movies':
+                self.load_catalog_section('movie')
+            elif label == 'TV Series':
+                self.load_catalog_section('series')
+            elif label == 'Search':
+                query = xbmcgui.Dialog().input('Search movies and series').strip()
+                if query:
+                    result = self.busy('Searching', lambda: api.search(query, api.providers())) or []
+                    self.populate('Search: ' + query, [r for r in result if r.get('type') == 'movie'],
+                                  [r for r in result if r.get('type') == 'series'])
+            elif label == 'Discover':
+                self.load_discover()
+            elif label == 'Library':
+                entries = self.busy('Syncing your library', api.account_library)
+                self.library_entries = entries if entries is not None else api.account_library(False)
+                self.load_library()
+            elif label == 'Addons':
+                self.load_addons()
+            elif label == 'Settings':
+                choice = xbmcgui.Dialog().select('Stremio for Kodi Settings', ['Account', 'Add-on settings', 'About Nimbus', 'Browse all addon features'])
+                if choice == 0:
+                    from settings_ui import account_menu
+                    account_menu()
+                elif choice == 1:
+                    from lib.appearance import options
+                    before = options(ADDON)
+                    api.CORE.openSettings()
+                    from lib.playback_settings import apply
+                    apply()
+                    if options(ADDON) != before:
+                        self.reload_appearance = True
+                        self.close()
+                elif choice == 2:
+                    xbmcgui.Dialog().textviewer('Nimbus · Stremio for Kodi',
+                        'Nimbus by Ivar Brandt\nEmbedded program adaptation for Stremio for Kodi.\nGPL-2.0-or-later.\nKodi remains the playback engine.')
+                elif choice == 3:
+                    xbmc.executebuiltin('ActivateWindow(videos,plugin://script.stremioelec/,return)')
+            return
         if cid in self.rows:
             pos = self.getControl(cid).getSelectedPosition()
             if 0 <= pos < len(self.rows[cid]):

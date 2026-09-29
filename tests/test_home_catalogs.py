@@ -46,3 +46,14 @@ class HomeTests(unittest.TestCase):
                 self.assertEqual(control.get('id'),str(400+index))
                 self.assertEqual(control.findtext('top'),'22')
                 self.assertEqual(row.findtext('height'),'440')
+
+    def test_filter_buttons_visible_for_movies_and_tv_series(self):
+        with tempfile.TemporaryDirectory() as d:
+            name, path, count = layout.build_layout(ROOT, d, 8)
+            tree = ET.parse(Path(path)/'resources/skins/Main/1080i'/name)
+            btn = tree.find('.//control[@id="9200"]')
+            self.assertIsNotNone(btn)
+            vis = btn.findtext('visible')
+            self.assertIn('Movies', vis)
+            self.assertIn('TV Series', vis)
+

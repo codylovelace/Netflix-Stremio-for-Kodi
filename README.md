@@ -36,7 +36,7 @@ Browse seasons and episodes with SxxExx/title overlays, compact runtime/IMDb/dat
 
 For installation and automatic updates, download [repository.stremioforkodi-1.0.0.zip](https://github.com/codylovelace/Netflix-Stremio-for-Kodi/releases/latest/download/repository.stremioforkodi-1.0.0.zip). In Kodi, choose **Add-ons → Install from zip file**, select that ZIP, then **Install from repository → Stremio for Kodi Repository → Program add-ons → Stremio for Kodi**. Enable automatic updates for the addon if desired.
 
-For a standalone installation, download `script.stremioelec-1.0.42.zip` from [Releases](https://github.com/codylovelace/Netflix-Stremio-for-Kodi/releases), then choose **Add-ons → Install from zip file** in Kodi. Launch **Stremio for Kodi** from Program add-ons.
+For a standalone installation, download `script.stremioelec-1.0.43.zip` from [Releases](https://github.com/codylovelace/Netflix-Stremio-for-Kodi/releases), then choose **Add-ons → Install from zip file** in Kodi. Launch **Stremio for Kodi** from Program add-ons.
 
 The stable add-on ID is `script.stremioelec`. Its media resolver and subtitle service are included in the same package; `plugin.video.stremioelec` is no longer required. Existing legacy profile data is copied non-destructively on first use. Existing destination settings take precedence.
 

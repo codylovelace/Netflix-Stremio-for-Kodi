@@ -1,3 +1,11 @@
+1.0.43
+- Add dedicated Movies and TV Series items to the left navigation sidebar.
+- Display all corresponding catalog rows (Netflix-style) when opening Movies or TV Series.
+- Include Continue Watching rows filtered by content type at the top of Movies and TV Series.
+- Provide top filter buttons for Catalog and Genre to browse or drill down into any catalog.
+- Support remote control right-arrow navigation directly from the sidebar into sections.
+- Synchronize active sidebar highlight when pressing Back to return to navigation.
+
 1.0.42
 - Update default catalog manifest to AIO Metadata (https://aiometadata.elfhosted.com).
 - Add support for AIO Metadata in Home catalogs, Cinemeta fallback bridge, and catalog resolvers.
