@@ -43,14 +43,10 @@ def build(package, output):
         'Install repository.stremioforkodi/repository.stremioforkodi-1.0.0.zip in Kodi, '
         'then choose Install from repository > Stremio for Kodi Repository > Program add-ons.\n',
         encoding='utf-8')
-    repo_zip_rel = f"{repo.attrib['id']}/{repo_zip.name}"
-    addon_zip_rel = f"{addon.attrib['id']}/{package.name}"
     html = (
         '<!DOCTYPE html>\n<html>\n<head><meta charset="utf-8"><title>Stremio for Kodi Repository</title></head>\n'
         '<body>\n<h2>Stremio for Kodi Repository</h2>\n<ul>\n'
         f'<li><a href="{repo_zip.name}">{repo_zip.name}</a></li>\n'
-        f'<li><a href="{repo_zip_rel}">{repo_zip_rel}</a></li>\n'
-        f'<li><a href="{addon_zip_rel}">{package.name}</a></li>\n'
         '</ul>\n</body>\n</html>\n'
     )
     (output / 'index.html').write_text(html, encoding='utf-8')
